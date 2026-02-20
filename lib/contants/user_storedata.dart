@@ -50,9 +50,9 @@ class AppPrefrence {
     return null;
   }
 
-  static Future AppInfo(String? value) async {
+  static Future removeAppInfo() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return await prefs.setString(appString.appversion, value!);
+    return await prefs.remove(appString.appversion);
   }
 
   static Future removeToken() async {

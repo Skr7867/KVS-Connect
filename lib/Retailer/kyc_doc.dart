@@ -397,9 +397,17 @@ class _KycDocState extends State<KycDoc> {
       child: Row(
         children: [
           _buildProgressStep(1, "PAN", true),
-          _buildProgressStep(2, "GST", false),
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => KycDocGst()),
+              );
+            },
+            child: _buildProgressStep(2, "GST", false),
+          ),
           _buildProgressStep(3, "Bank", false),
-          _buildProgressStep(4, "Review", false),
+          // _buildProgressStep(4, "Review", false),
         ],
       ),
     );
@@ -408,6 +416,7 @@ class _KycDocState extends State<KycDoc> {
   Widget _buildProgressStep(int step, String label, bool isActive) {
     return Expanded(
       child: Container(
+        width: 70,
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           color: isActive

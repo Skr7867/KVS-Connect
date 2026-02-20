@@ -27,20 +27,26 @@ class _SplashScreenState extends State<SplashScreen> {
     final token = await AppPrefrence.getToken();
     final role = await AppPrefrence.getString("role");
 
-    if (token == null) {
-      Navigator.pushReplacement(
+    if (!mounted) return;
+
+    // ✅ Proper token validation
+    if (token == null || token.isEmpty) {
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => CreateAccountScreen()),
+        (route) => false,
       );
     } else if (role == "RETAILER") {
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => Home()),
+        (route) => false,
       );
     } else {
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => HomeDistibuter()),
+        (route) => false,
       );
     }
   }

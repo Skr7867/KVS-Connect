@@ -13,11 +13,11 @@ class MyAccountScreenDistibutor extends StatefulWidget {
   const MyAccountScreenDistibutor({super.key});
 
   @override
-  State<MyAccountScreenDistibutor> createState() => _MyAccountScreenDistibutorState();
+  State<MyAccountScreenDistibutor> createState() =>
+      _MyAccountScreenDistibutorState();
 }
 
 class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
-
   ProfileResponseModel? profiledisttdata;
 
   @override
@@ -29,29 +29,31 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
   getData() async {
     appLoader.show(context);
     final rsp = ProfileDisttApi().getProfile();
-    rsp.then((value) {
-      log(value.toString());
-      try {
-        setState(() {
-          profiledisttdata = value;
-          print("Data show${profiledisttdata.toString()}");
-          // print("data show opposite gender${oppositegenderMataches}");
+    rsp
+        .then((value) {
+          log(value.toString());
+          try {
+            setState(() {
+              profiledisttdata = value;
+              print("Data show${profiledisttdata.toString()}");
+              // print("data show opposite gender${oppositegenderMataches}");
+            });
+            appLoader.hide();
+          } catch (e) {
+            setState(() {
+              // loadingData = false;
+            });
+          }
+        })
+        .onError((error, stackTrace) {
+          showTost(error);
+          print(error);
+          appLoader.hide();
+        })
+        .whenComplete(() {
+          appLoader.hide();
         });
-        appLoader.hide();
-      } catch (e) {
-        setState(() {
-          // loadingData = false;
-        });
-      }
-    }).onError((error, stackTrace) {
-      showTost(error);
-      print(error);
-      appLoader.hide();
-    }).whenComplete(() {
-      appLoader.hide();
-    });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -105,8 +107,7 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
               children: [
                 Text(
                   "${profiledisttdata?.data?.profile.name}",
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 SizedBox(height: 4),
                 Text(
@@ -132,10 +133,21 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
       "Contact Information",
       Column(
         children: [
-          _infoRow(Icons.phone, "Phone Number", "${profiledisttdata?.data?.contactInformation.phone}"),
-          _infoRow(Icons.email, "Email Address", "${profiledisttdata?.data?.contactInformation.email}"),
-          _infoRow(Icons.location_on, "Address",
-              "${profiledisttdata?.data?.contactInformation.address}"),
+          _infoRow(
+            Icons.phone,
+            "Phone Number",
+            "${profiledisttdata?.data?.contactInformation.phone}",
+          ),
+          _infoRow(
+            Icons.email,
+            "Email Address",
+            "${profiledisttdata?.data?.contactInformation.email}",
+          ),
+          _infoRow(
+            Icons.location_on,
+            "Address",
+            "${profiledisttdata?.data?.contactInformation.address}",
+          ),
         ],
       ),
     );
@@ -149,12 +161,16 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
           _menuRow(Icons.security, "Privacy & Security"),
           InkWell(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(
-                builder: (_) => NotificationsScreenDistibutor(),),);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => NotificationsScreenDistibutor(),
+                ),
+              );
             },
 
-
-            child: _menuRow(Icons.notifications, "Notifications"),),
+            child: _menuRow(Icons.notifications, "Notifications"),
+          ),
           _menuRow(Icons.lock, "Change Password"),
         ],
       ),
@@ -167,19 +183,17 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
       Row(
         children: [
           Expanded(
-            child: _gradientCard(
-              "Business Type",
-              "Distributor",
-              [Colors.green.shade800, AppColors.primaryOrange],
-            ),
+            child: _gradientCard("Business Type", "Distributor", [
+              Colors.green.shade800,
+              AppColors.primaryOrange,
+            ]),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _gradientCard(
-              "Current Plan",
-              "Premium",
-              [AppColors.primaryOrange, Colors.deepOrange],
-            ),
+            child: _gradientCard("Current Plan", "Premium", [
+              AppColors.primaryOrange,
+              Colors.deepOrange,
+            ]),
           ),
         ],
       ),
@@ -214,8 +228,7 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
           SizedBox(width: 8),
           Text(
             "Logout",
-            style: TextStyle(
-                color: Colors.red, fontWeight: FontWeight.w600),
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -229,8 +242,7 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
         children: [
           Text(
             title,
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           child,
@@ -272,13 +284,15 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        color: Colors.grey, fontSize: 12)),
+                Text(
+                  title,
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
                 const SizedBox(height: 2),
-                Text(value,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  value,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ],
             ),
           ),
@@ -300,9 +314,10 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(title,
-                style:
-                const TextStyle(fontWeight: FontWeight.w500)),
+            child: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
           ),
           const Icon(Icons.chevron_right, color: Colors.grey),
         ],
@@ -320,15 +335,19 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style:
-              const TextStyle(color: Colors.white70, fontSize: 12)),
+          Text(
+            title,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
           const SizedBox(height: 6),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -344,5 +363,4 @@ class _MyAccountScreenDistibutorState extends State<MyAccountScreenDistibutor> {
       child: Icon(icon, size: 16, color: AppColors.primaryOrange),
     );
   }
-
 }

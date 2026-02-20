@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:safeemilocker/text_style/app_text_styles.dart';
 import 'package:safeemilocker/text_style/colors.dart';
@@ -213,12 +214,20 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                   final otp = value['data']['otp'].toString();
 
                                   /// 🔔 OTP Toast
-                                  Fluttertoast.showToast(
-                                    msg: "Your OTP is $otp",
-                                    toastLength: Toast.LENGTH_SHORT,
-                                    gravity: ToastGravity.BOTTOM,
-                                    backgroundColor: Colors.black,
-                                    textColor: Colors.white,
+                                  // Fluttertoast.showToast(
+                                  //   msg: "Your OTP is $otp",
+                                  //   toastLength: Toast.LENGTH_SHORT,
+                                  //   gravity: ToastGravity.BOTTOM,
+                                  //   backgroundColor: Colors.black,
+                                  //   textColor: Colors.white,
+                                  // );
+                                  Get.snackbar(
+                                    'Your Otp',
+                                    '$otp',
+                                    backgroundColor: AppColors.BtnGreenBg,
+                                    colorText: Colors.white,
+                                    duration: Duration(seconds: 5),
+                                    snackPosition: SnackPosition.TOP,
                                   );
 
                                   /// ⬆️ Bottom Sheet Open

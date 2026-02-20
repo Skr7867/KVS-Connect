@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:safeemilocker/Retailer/kyc_doc.dart';
 import 'package:safeemilocker/Retailer/my_key_screen.dart';
@@ -8,6 +6,7 @@ import 'package:safeemilocker/text_style/colors.dart';
 
 import '../api/Retailer_Api/profile_api/profile_api.dart';
 import '../api/Retailer_Api/profile_api/profile_api_model.dart';
+import '../contants/userdatas.dart';
 import '../create_account.dart';
 import '../widgets/custom_loader.dart';
 import '../widgets/popup.dart';
@@ -27,37 +26,76 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
   RetailerProfileModel? profiledata;
   @override
   void initState() {
-    getData();
     super.initState();
+    getData();
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text("Confirm Logout"),
+          content: const Text("Are you sure you want to logout?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context); // close dialog
+                await _logout();
+              },
+              child: const Text("Logout"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _logout() async {
+    await AppPrefrence.clear(); // clear all stored data
+
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateAccountScreen()),
+      (route) => false,
+    );
   }
 
   Future<void> getData() async {
-    // appLoader.show(context);
-    final rsp = ProfileApi().getProfile();
-    rsp
-        .then((value) {
-          log(value.toString());
-          try {
-            setState(() {
-              profiledata = value;
-              print("Data show${profiledata.toString()}");
-              // print("data show opposite gender${oppositegenderMataches}");
-            });
-            appLoader.hide();
-          } catch (e) {
-            setState(() {
-              // loadingData = false;
-            });
-          }
-        })
-        .onError((error, stackTrace) {
-          showTost(error);
-          print(error);
-          appLoader.hide();
-        })
-        .whenComplete(() {
-          appLoader.hide();
-        });
+    try {
+      // appLoader.show(context);
+
+      final value = await ProfileApi().getProfile();
+
+      if (!mounted) return; // ✅ VERY IMPORTANT
+
+      setState(() {
+        profiledata = value;
+      });
+
+      if (mounted) {
+        appLoader.hide();
+      }
+    } catch (error) {
+      if (!mounted) return;
+
+      showTost(error.toString());
+
+      if (mounted) {
+        appLoader.hide();
+      }
+    }
   }
 
   @override
@@ -139,12 +177,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
               ),
               ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CreateAccountScreen(),
-                    ),
-                  );
+                  _showLogoutDialog();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryOrange,

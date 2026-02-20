@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:safeemilocker/splash_screen.dart';
 
 import 'Retailer/home.dart';
@@ -10,11 +11,23 @@ import 'distibutor/home.dart';
 var isLoggedIn = false;
 var isRetailer = false;
 void main() async {
+  // WidgetsFlutterBinding.ensureInitialized();
+
+  // var token = await AppPrefrence.getToken();
+  // log("token value $token");
+  // isLoggedIn = token != null;
+  // final role = await AppPrefrence.getString("role");
+  // isRetailer = role == "RETAILER";
+
+  // runApp(const MyApp());
+
   WidgetsFlutterBinding.ensureInitialized();
 
   var token = await AppPrefrence.getToken();
   log("token value $token");
-  isLoggedIn = token != null;
+
+  isLoggedIn = token != null && token.isNotEmpty;
+
   final role = await AppPrefrence.getString("role");
   isRetailer = role == "RETAILER";
 
@@ -27,7 +40,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       home: !isLoggedIn
           ? SplashScreen()

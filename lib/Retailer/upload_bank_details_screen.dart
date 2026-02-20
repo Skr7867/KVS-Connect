@@ -397,6 +397,7 @@ class _UploadBankDetailsScreenState extends State<UploadBankDetailsScreen> {
                             isRequired: true,
                             controller: ifscController,
                             icon: Icons.code,
+                            maxLength: 11,
                             isValid: isIfscValid,
                             errorText: ifscError,
                             textCapitalization: TextCapitalization.characters,
@@ -577,8 +578,16 @@ class _UploadBankDetailsScreenState extends State<UploadBankDetailsScreen> {
         children: [
           _buildProgressStep(1, "PAN", true),
           _buildProgressStep(2, "GST", true),
-          _buildProgressStep(3, "Bank", true),
-          _buildProgressStep(4, "Review", false),
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => UploadBankDetailsScreen()),
+              );
+            },
+            child: _buildProgressStep(3, "Bank", true),
+          ),
+          // _buildProgressStep(4, "Review", false),
         ],
       ),
     );
@@ -641,6 +650,7 @@ class _UploadBankDetailsScreenState extends State<UploadBankDetailsScreen> {
     required TextEditingController controller,
     required IconData icon,
     required bool isValid,
+    maxLength,
     String? errorText,
     TextInputType? keyboardType,
     TextCapitalization textCapitalization = TextCapitalization.none,
@@ -686,6 +696,15 @@ class _UploadBankDetailsScreenState extends State<UploadBankDetailsScreen> {
           controller: controller,
           keyboardType: keyboardType,
           textCapitalization: textCapitalization,
+          maxLength: maxLength, // ✅ Added
+          buildCounter:
+              (
+                context, {
+                required currentLength,
+                required isFocused,
+                maxLength,
+              }) => null, // ✅ Remove counter text
+
           onChanged: (_) => onChanged(),
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           decoration: InputDecoration(
@@ -720,6 +739,7 @@ class _UploadBankDetailsScreenState extends State<UploadBankDetailsScreen> {
               ),
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            counterText: "", // ✅ Extra safety to hide counter
           ),
         ),
         if (errorText != null && !isValid) ...[

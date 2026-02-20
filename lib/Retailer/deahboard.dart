@@ -1,8 +1,7 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:safeemilocker/Retailer/notifications_screen.dart';
 import 'package:safeemilocker/Retailer/pending_emi.dart';
+import 'package:safeemilocker/Retailer/support_screen.dart';
 import 'package:safeemilocker/text_style/app_text_styles.dart';
 
 import '../api/Retailer_Api/dashboard/dashboard_retailer_api.dart';
@@ -94,29 +93,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   void initState() {
-    getData();
     super.initState();
+    getData();
   }
 
-  getData() async {
-    final rsp = DashboardRetailerApi().getAllDashboard();
-    rsp
-        .then((value) {
-          log(value.toString());
-          try {
-            setState(() {
-              dashboardRetailerModel = value;
-              print("Data show${dashboardRetailerModel.toString()}");
-            });
-          } catch (e) {
-            setState(() {});
-          }
-        })
-        .onError((error, stackTrace) {
-          showTost(error);
-          print(error);
-        })
-        .whenComplete(() {});
+  Future<void> getData() async {
+    try {
+      final value = await DashboardRetailerApi().getAllDashboard();
+
+      if (!mounted) return; // ✅ VERY IMPORTANT
+
+      setState(() {
+        dashboardRetailerModel = value;
+      });
+    } catch (error) {
+      if (!mounted) return; // ✅ prevent crash
+
+      showTost(error.toString());
+      debugPrint(error.toString());
+    }
   }
 
   @override
@@ -439,10 +434,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           label: "Reports",
                           color: Color(0xFF9C27B0),
                         ),
-                        const _QuickAction(
-                          icon: Icons.support_agent_rounded,
-                          label: "Support",
-                          color: Color(0xFF00BCD4),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SupportScreen(),
+                              ),
+                            );
+                          },
+                          child: const _QuickAction(
+                            icon: Icons.support_agent_rounded,
+                            label: "Support",
+                            color: Color(0xFF00BCD4),
+                          ),
                         ),
                       ],
                     );

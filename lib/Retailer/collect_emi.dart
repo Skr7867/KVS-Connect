@@ -4,7 +4,6 @@ import 'package:safeemilocker/text_style/app_text_styles.dart';
 import 'package:safeemilocker/text_style/colors.dart';
 
 import '../api/Retailer_Api/emi_completed/emi_completed_model.dart';
-import '../widgets/custom_loader.dart';
 import '../widgets/popup.dart';
 
 class CollectedEmiScreen extends StatefulWidget {
@@ -16,50 +15,53 @@ class CollectedEmiScreen extends StatefulWidget {
 
 class _CollectedEmiScreenState extends State<CollectedEmiScreen> {
   EmiCompeletedModel? emiCompeletedModel;
+  bool isLoading = true;
+
   @override
   void initState() {
+    super.initState();
     getData();
   }
 
-  getData() {
-    appLoader.show(context);
+  Future<void> getData() async {
+    try {
+      final rsp = await EmiCompetedApi.getCompleted(
+        page: 1,
+        limit: 20,
+        status: "AVAILABLE",
+      );
 
-
-  EmiCompetedApi.getCompleted(
-  page: 1,
-  limit: 20,
-  status: "AVAILABLE",
-  ).then((rsp) {
-  if (rsp["success"] == true) {
-  setState(() {
-    emiCompeletedModel = EmiCompeletedModel.fromJson(rsp["data"]);
-  });
-  } else {
-  showTost(rsp["message"].toString());
+      if (rsp["success"] == true) {
+        setState(() {
+          emiCompeletedModel = EmiCompeletedModel.fromJson(rsp["data"]);
+        });
+      } else {
+        showTost(rsp["message"].toString());
+      }
+    } catch (error) {
+      showTost(error.toString());
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
-  }).catchError((error) {
-  showTost(error.toString());
-  }).whenComplete(() {
-  appLoader.hide();
-  });
-}
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffF6F7F9),
       appBar: AppBar(
         backgroundColor: AppColors.primaryOrange,
         elevation: 0,
-        title: Text(
-          "Collected EMI",
-          style: AppTextStyles.heading18whiteBold,
-        ),
+        title: Text("Collected EMI", style: AppTextStyles.heading18whiteBold),
         leading: const BackButton(color: Colors.white),
       ),
       body: Column(
         children: [
-          _filterTabs(),
+          // _filterTabs(),
           const SizedBox(height: 8),
           Expanded(child: _emiList()),
         ],
@@ -67,63 +69,33 @@ class _CollectedEmiScreenState extends State<CollectedEmiScreen> {
     );
   }
 
-  // ================= FILTER TABS =================
-  Widget _filterTabs() {
-    final tabs = [
-      {"title": "All (24)", "active": true},
-      {"title": "Active (18)", "active": false},
-      {"title": "Pending EMI (6)", "active": false},
-      {"title": "Locked", "active": false},
-    ];
-
-    return Container(
-      height: 56,
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: tabs.length,
-        itemBuilder: (context, index) {
-          final tab = tabs[index];
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Chip(
-              label: Text(tab['title'] as String),
-              backgroundColor: tab['active'] as bool
-                  ? AppColors.primaryOrange
-                  : Colors.grey.shade200,
-              labelStyle: TextStyle(
-                color: tab['active'] as bool
-                    ? Colors.white
-                    : Colors.black87,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   // ================= EMI LIST =================
   Widget _emiList() {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final customers = emiCompeletedModel?.data.customers ?? [];
+
+    if (customers.isEmpty) {
+      return const Center(
+        child: Text("No EMI Found", style: TextStyle(fontSize: 16)),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(12),
-      itemCount: 4,
+      itemCount: customers.length,
       itemBuilder: (context, index) {
-        return _emiCard(
-          collectionType: index == 0
-              ? "On Shop QR"
-              : index == 1
-              ? "Autopay"
-              : "Cash",
-        );
+        final customer = customers[index];
+
+        return _emiCard(customer: customer, collectionType: "Cash");
       },
     );
   }
 
   // ================= EMI CARD =================
-  Widget _emiCard({required String collectionType}) {
+  Widget _emiCard({required dynamic customer, required String collectionType}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -139,7 +111,6 @@ class _CollectedEmiScreenState extends State<CollectedEmiScreen> {
       ),
       child: Row(
         children: [
-          // LEFT ORANGE BAR
           Container(
             width: 4,
             height: 180,
@@ -151,36 +122,27 @@ class _CollectedEmiScreenState extends State<CollectedEmiScreen> {
               ),
             ),
           ),
-
-          // CONTENT
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // NAME
                   Text(
-                    "${emiCompeletedModel?.data.customers.first.name}",
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                    customer.name ?? "No Name",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "${emiCompeletedModel?.data.customers.first.name}",
-                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                    "ID: ${customer.id ?? "--"}",
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "ID: ${emiCompeletedModel?.data.customers.first.id}",
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-
                   const Divider(height: 24),
-
-                  // PHONE
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Icon(Icons.phone_android, size: 18),
                       SizedBox(width: 8),
                       Text(
@@ -194,17 +156,11 @@ class _CollectedEmiScreenState extends State<CollectedEmiScreen> {
                     "IMEI: ****-****-4321",
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // DATE & AMOUNT
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [
-                      _LabelValue(
-                        label: "Date",
-                        value: "12 Jan 2025",
-                      ),
+                      _LabelValue(label: "Date", value: "12 Jan 2025"),
                       _LabelValue(
                         label: "Amount Received",
                         value: "5000 INR",
@@ -212,14 +168,8 @@ class _CollectedEmiScreenState extends State<CollectedEmiScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 12),
-
-                  // COLLECTION TYPE
-                  _LabelValue(
-                    label: "Collection Type",
-                    value: collectionType,
-                  ),
+                  _LabelValue(label: "Collection Type", value: collectionType),
                 ],
               ),
             ),
@@ -228,6 +178,42 @@ class _CollectedEmiScreenState extends State<CollectedEmiScreen> {
       ),
     );
   }
+
+  // ================= FILTER TABS =================
+  // Widget _filterTabs() {
+  //   final tabs = [
+  //     {"title": "All", "active": true},
+  //     {"title": "Active", "active": true},
+  //     {"title": "Pending EMI", "active": false},
+  //     {"title": "Locked", "active": false},
+  //   ];
+
+  //   return Container(
+  //     height: 56,
+  //     color: Colors.white,
+  //     padding: const EdgeInsets.symmetric(horizontal: 12),
+  //     child: ListView.builder(
+  //       scrollDirection: Axis.horizontal,
+  //       itemCount: tabs.length,
+  //       itemBuilder: (context, index) {
+  //         final tab = tabs[index];
+  //         return Padding(
+  //           padding: const EdgeInsets.only(right: 8),
+  //           child: Chip(
+  //             label: Text(tab['title'] as String),
+  //             backgroundColor: tab['active'] as bool
+  //                 ? AppColors.primaryOrange
+  //                 : Colors.grey.shade200,
+  //             labelStyle: TextStyle(
+  //               color: tab['active'] as bool ? Colors.white : Colors.black87,
+  //               fontWeight: FontWeight.w500,
+  //             ),
+  //           ),
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
 }
 
 // ================= LABEL VALUE =================
@@ -247,10 +233,7 @@ class _LabelValue extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
-        ),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 2),
         Text(
           value,

@@ -1,7 +1,6 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:safeemilocker/Retailer/add_customer.dart';
 
 import '../api/Retailer_Api/customer_all_data/Customer_all_get_model.dart';
 import '../api/Retailer_Api/customer_all_data/customer_all_get_api.dart';
@@ -54,35 +53,52 @@ class _CustomersScreenState extends State<CustomersScreen>
 
   /// 🔹 DEFAULT CUSTOMER LIST
   Future<void> getData({int page = 1}) async {
+    if (!mounted) return;
+
     setState(() {
       isLoading = true;
     });
 
-    final resp = await CustomerDataApi().getAllCustomers(
-      page: page,
-      limit: itemsPerPage,
-    );
+    try {
+      final resp = await CustomerDataApi().getAllCustomers(
+        page: page,
+        limit: itemsPerPage,
+      );
 
-    setState(() {
-      customerData = resp;
-      currentPage = page;
-      totalPages = resp.data?.totalPages ?? 1;
-      isLoading = false;
-    });
+      if (!mounted) return; // 🔥 important
 
-    // Scroll to top when page changes
-    scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOut,
-    );
+      setState(() {
+        customerData = resp;
+        currentPage = page;
+        totalPages = resp.data?.totalPages ?? 1;
+        isLoading = false;
+        isFirstLoading = false;
+      });
+
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOut,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+        isFirstLoading = false;
+      });
+    }
   }
 
   /// 🔹 SEARCH API
   Future<void> fetchCustomers() async {
-    try {
-      setState(() => isLoading = true);
+    if (!mounted) return;
 
+    setState(() => isLoading = true);
+
+    try {
       final value = await SearchApi().get(
         page: 1,
         limit: itemsPerPage,
@@ -90,6 +106,8 @@ class _CustomersScreenState extends State<CustomersScreen>
         accountStatus: "ACTIVE",
         emiStatus: "ACTIVE",
       );
+
+      if (!mounted) return; // 🔥 critical
 
       final List customersJson = value["data"]["customers"] ?? [];
 
@@ -101,7 +119,8 @@ class _CustomersScreenState extends State<CustomersScreen>
         isLoading = false;
       });
     } catch (e) {
-      log("Search API Error: $e");
+      if (!mounted) return;
+
       setState(() => isLoading = false);
     }
   }
@@ -137,33 +156,31 @@ class _CustomersScreenState extends State<CustomersScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: CustomScrollView(
-            controller: scrollController,
-            slivers: [
-              _buildSliverHeader(),
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _buildStatsCards(),
-                    const SizedBox(height: 20),
-                    _buildSearchBar(),
-                    const SizedBox(height: 20),
-                    _buildSectionHeader(),
-                    const SizedBox(height: 12),
-                  ]),
-                ),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            _buildSliverHeader(),
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildStatsCards(),
+                  const SizedBox(height: 20),
+                  _buildSearchBar(),
+                  const SizedBox(height: 20),
+                  _buildSectionHeader(),
+                  const SizedBox(height: 12),
+                ]),
               ),
-              _buildCustomerList(),
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverToBoxAdapter(child: _buildPagination()),
-              ),
-            ],
-          ),
+            ),
+            _buildCustomerList(),
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverToBoxAdapter(child: _buildPagination()),
+            ),
+          ],
         ),
       ),
     );
@@ -220,6 +237,12 @@ class _CustomersScreenState extends State<CustomersScreen>
                   title: 'Add Customers ',
                   fontSize: 12,
                   buttonColor: AppColors.buttonColor,
+                  onPress: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => AddCustomerScreen()),
+                    );
+                  },
                 ),
               ],
             ),
@@ -542,7 +565,7 @@ class _CustomersScreenState extends State<CustomersScreen>
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              user.phoneDetails?.displayName ?? "No device",
+                              user.phoneDetails.displayName,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
